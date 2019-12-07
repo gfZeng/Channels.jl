@@ -10,8 +10,8 @@ end
 
 mutable struct LinkedList{T} <: AbstractList{T}
       size::Integer
-      head::Union{Node{T}, Nothing}
-      tail::Union{Node{T}, Nothing}
+      first::Union{Node{T}, Nothing}
+      last::Union{Node{T}, Nothing}
       LinkedList{T}() where T = new{T}(0, nothing, nothing)
       function LinkedList(es::T...) where T
             lst = new{T}(0, nothing, nothing)
@@ -22,42 +22,32 @@ mutable struct LinkedList{T} <: AbstractList{T}
       end
 end
 
-isempty(lst::AbstractList) = iszero(length(lst))
-first(lst::AbstractList) = lst[1]
-last(lst::AbstractList) = lst[end]
+Base.isempty(lst::AbstractList) = iszero(length(lst))
+Base.first(lst::AbstractList) = lst[1]
+Base.last(lst::AbstractList) = lst[end]
 
-length(lst::LinkedList) = lst.size
-iterate(lst::LinkedList) = (lst.head, 1)
+Base.length(lst::LinkedList) = lst.size
 
-iterate(lst::LinkedList, state = lst.head) = isnothing(state) ? nothing : (state.e, state.next)
-iterate(r::Iterators.Reverse{LinkedList{T}}, state = r.itr.tail) where T = isnothing(state) ? nothing : (state.e, state.prev)
+Base.iterate(lst::LinkedList, state = lst.first) = isnothing(state) ? nothing : (state.e, state.next)
+Base.iterate(r::Iterators.Reverse{LinkedList{T}}, state = r.itr.last) where T = isnothing(state) ? nothing : (state.e, state.prev)
 
-lastindex(lst::LinkedList) = lst.size
+Base.lastindex(lst::LinkedList) = lst.size
 
-function getindex(lst::LinkedList, i::Integer)
-      i > lst.size && throw(BoundsError(lst, i))
-      itr = lst
-      if i * 2 > lst.size
-            i = lst.size - i + 1
-            itr = Iterators.reverse(lst)
-      end
-      for e in itr
-            i -= 1
-            iszero(i) && return e
-      end
-end
+Base.empty(::LinkedList{T}) where T = LinkedList{T}()
+Base.empty!(lst::LinkedList) = (lst.size = 0; lst.first = nothing; lst.last = nothing; lst)
+Base.eltype(::Type{LinkedList{T}}) where T = T
 
 function getnode(lst::LinkedList, i::Integer)
-      i > lst.size && throw(BoundsError(lst, i))
+      (i <= 0 || i > lst.size) && throw(BoundsError(lst, i))
       if i * 2 > lst.size
-            node, i = lst.tail, lst.size - i
+            node, i = lst.last, lst.size - i
             while i > 0
                   node = node.prev
                   i -= 1
             end
             return node
       end
-      node, i = lst.head, i - 1
+      node, i = lst.first, i - 1
       while i > 0
             node = node.next
             i -= 1
@@ -65,50 +55,57 @@ function getnode(lst::LinkedList, i::Integer)
       return node
 end
 
-function setindex!(lst::LinkedList{T}, e::T, i::Integer) where T
+Base.getindex(lst::LinkedList, i::Integer) = getnode(lst, i).e
+
+function Base.setindex!(lst::LinkedList{T}, e::T, i::Integer) where T
+
+      i == 0 && return pushfirst!(lst, e)
+      i == lst.size + 1 && return push!(lst, e)
+
       node = getnode(lst, i)
 
-      @show node.e
       new = Node{T}(e)
       new.next = node.next
       new.prev = node.prev
-      isnothing(node.prev) ? lst.head = new : node.prev.next = new
-      isnothing(node.next) ? lst.tail = new : node.next.prev = new
+      isnothing(node.prev) ? lst.first = new : node.prev.next = new
+      isnothing(node.next) ? lst.last = new : node.next.prev = new
       return lst
 end
 
-function push!(lst::LinkedList{T}, e::T) where T
+function Base.push!(lst::LinkedList{T}, e::T) where T
       n = Node{T}(e)
-      n.prev = lst.tail
+      n.prev = lst.last
 
-      isempty(lst) ? lst.head = n : lst.tail.next = n
+      isempty(lst) ? lst.first = n : lst.last.next = n
 
-      lst.tail = n
+      lst.last = n
       lst.size += 1
       return lst
 end
 
-function pushfirst!(lst::LinkedList{T}, e::T) where T
+function Base.pushfirst!(lst::LinkedList{T}, e::T) where T
       n = Node{T}(e)
-      n.next = lst.head
-      isempty(lst) ? lst.tail = n : lst.head.prev = n
-      lst.head = n
+      n.next = lst.first
+      isempty(lst) ? lst.last = n : lst.first.prev = n
+      lst.first = n
       lst.size += 1
       return lst
 end
 
-function pop!(lst::LinkedList)
-      tail = lst.tail
-      lst.tail = tail.prev
+function Base.pop!(lst::LinkedList)
+      last = lst.last
+      lst.last = last.prev
+      lst.last.next = nothing
       lst.size -= 1
-      return tail.e
+      return last.e
 end
 
-function popfirst!(lst::LinkedList)
-      head = lst.head
-      lst.head = head.next
+function Base.popfirst!(lst::LinkedList)
+      first = lst.first
+      lst.first = first.next
+      lst.first.prev = nothing
       lst.size -= 1
-      return head.e
+      return first.e
 end
 
 function Base.show(io::IO, lst::AbstractList{T}) where T
