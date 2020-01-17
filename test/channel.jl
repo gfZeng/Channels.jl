@@ -40,5 +40,10 @@ function testchannel(Channel)
         end
     end
 end
+
+@time testchannel(Base.Channel)
+@time testchannel(Channels.Channel)
+@time testchannel(Base.Channel)
+@time testchannel(Channels.Channel)
 @time testchannel(Base.Channel)
 @time testchannel(Channels.Channel)
