@@ -28,6 +28,16 @@ function testchannel(Channel)
         @async push!(chnl, 4)
         @async take!(chnl)
         @test 3 == take!(chnl)
+
+
+        chnl = Channel{Any}(9)
+        @async for i = 1:100
+            push!(chnl, i)
+        end
+
+        for i = 1:100
+            @test i == take!(chnl)
+        end
     end
 end
 testchannel(Base.Channel)

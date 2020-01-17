@@ -25,7 +25,11 @@
     @test 2 == del!(buf)
     @test 3 == del!(buf)
     @test isempty(buf)
-    @test missing === del!(buf)
+    try
+        del!(buf)
+    catch e
+        @test e isa BoundsError
+    end
 
     buf = Buffer{:Sliding, Int64}(3)
     for i = 1:10
@@ -35,12 +39,20 @@
     @test 9 == del!(buf)
     @test 10 == del!(buf)
     @test isempty(buf)
-    @test missing === del!(buf)
+    try
+        del!(buf)
+    catch e
+        @test e isa BoundsError
+    end
 
     buf = Buffer{:Dropping, Int64}(1)
     for i = 1:10
         add!(buf, i)
     end
     @test 1 == del!(buf)
-    @test missing === del!(buf)
+    try
+        del!(buf)
+    catch e
+        @test e isa BoundsError
+    end
 end

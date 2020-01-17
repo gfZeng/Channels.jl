@@ -5,7 +5,7 @@ struct Buffer{Type, T}  <: AbstractBuffer{T}
     capacity::Integer
     elements::LinkedList{T}
     Buffer{Type, T}(n::Integer) where {Type, T} = new{Type, T}(n, LinkedList{T}())
-    Buffer{T}(n::Integer=0) where {T} = Buffer{:Fixed, T}(n)
+    Buffer{T}(n::Integer) where {T} = Buffer{:Fixed, T}(n)
 end
 
 Base.isempty(buf::Buffer) = isempty(buf.elements)
@@ -13,7 +13,7 @@ isfull(::Buffer) = false
 isfull(buf::Buffer{:Fixed}) = buf.capacity == length(buf.elements)
 
 function del!(buf::Buffer)
-    isempty(buf.elements) && return missing
+    isempty(buf.elements) && throw(BoundsError())
     return popfirst!(buf.elements)
 end
 

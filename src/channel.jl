@@ -49,15 +49,23 @@ function push_unbuffered(chnl::Channel, e)
 end
 
 function push_buffered(chnl::Channel, e)
+    t = nothing
     iswait = lock(chnl) do
         if isfull(chnl.buf)
             t = @task begin
-                chnl.push!(chnl.buf, e)
+                chnl.add!(chnl.buf, e)
                 schedule(chnl.ct)
             end
+            push!(chnl.pushs, t)
             return true
         end
+        chnl.ct = current_task()
+        chnl.add!(chnl.buf, e)
+        isempty(chnl.takes) || yieldto(popfirst!(chnl.takes))
+        return false
     end
+    iswait && wait(t)
+    return e
 end
 
 
@@ -79,6 +87,25 @@ function take_unbuffered(chnl::Channel)
 end
 
 function take_buffered(chnl::Channel)
+    t = nothing
+    ret = nothing
+    iswait = lock(chnl) do
+        if isempty(chnl.buf)
+            t = @task begin
+                ret = del!(chnl.buf)
+                schedule(chnl.ct)
+                ret
+            end
+            push!(chnl.takes, t)
+            return true
+        end
+        chnl.ct = current_task()
+        ret = del!(chnl.buf)
+        isempty(chnl.pushs) || yieldto(popfirst!(chnl.pushs))
+        return false
+    end
+    iswait && (wait(t); return t.result)
+    return ret
 end
 
 isbuffered(chnl::Channel) = !isnothing(chnl.buf)
