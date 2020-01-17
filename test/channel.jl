@@ -41,9 +41,7 @@ function testchannel(Channel)
     end
 end
 
-@time testchannel(Base.Channel)
-@time testchannel(Channels.Channel)
-@time testchannel(Base.Channel)
-@time testchannel(Channels.Channel)
-@time testchannel(Base.Channel)
-@time testchannel(Channels.Channel)
+for i = 1:10
+    @time testchannel(Base.Channel)
+    @time testchannel(Channels.Channel)
+end
