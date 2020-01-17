@@ -1,0 +1,4 @@
+name = "Channels"
+uuid = "32485f84-4f53-4003-a142-9b5e8680a7e2"
+authors = ["Isaac Tsang <ndtm.idea@gmail.com>"]
+version = "0.1.0"

@@ -95,7 +95,7 @@ end
 function Base.pop!(lst::LinkedList)
       last = lst.last
       lst.last = last.prev
-      lst.last.next = nothing
+      lst.last === nothing || (lst.last.next = nothing)
       lst.size -= 1
       return last.e
 end
@@ -103,7 +103,7 @@ end
 function Base.popfirst!(lst::LinkedList)
       first = lst.first
       lst.first = first.next
-      lst.first.prev = nothing
+      lst.first === nothing || (lst.first.prev = nothing)
       lst.size -= 1
       return first.e
 end
